@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-1: #0068B2;
+  --color-primary-2: #1B6498;
+  --color-primary-3: #0F3957;
+  --color-white-1: #FFFFFF;
+  --color-white-2: #E6E6E6;
+  --color-white-3: #CCCCCC;
+  --color-white-4: #A6A6A6;
+  --color-gray-1: #1A1C1E;
+  --color-gray-2: #212426;
+  --color-gray-3: #2F3337;
+}
+
+@layer base {
+  body {
+    @apply tracking-widest;
+  }
+}
