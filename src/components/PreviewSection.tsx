@@ -1,18 +1,35 @@
 import { useState } from "react"
-import { Eye, Settings, FileText, ExternalLink, Info, ChevronDown } from "lucide-react"
+import { Eye, Settings, FileText, ExternalLink } from "lucide-react"
 import DocxSettings from "./DocxSettings"
+import MarkdownRenderer from "./MarkdownRenderer"
+import FileSelector from "./FileSelector"
 
 interface PreviewSectionProps {
   content: string;
   isSynced: boolean;
   onSync: () => void;
+  // Props baru untuk FileSelector
+  showFileSelector?: boolean;
+  files?: File[];
+  selectedIndex?: number;
+  onIndexChange?: (index: number) => void;
+  onContentLoad?: (content: string) => void;
 }
 
-function PreviewSection({ content, isSynced, onSync }: PreviewSectionProps) {
+function PreviewSection({
+  content,
+  isSynced,
+  onSync,
+  showFileSelector,
+  files,
+  selectedIndex,
+  onIndexChange,
+  onContentLoad
+}: PreviewSectionProps) {
   const [activeTab, setActiveTab] = useState<"markdown" | "docx" | "settings">("markdown")
 
   return (
-    <div className="w-full p-5 flex flex-col gap-4 border border-primary-3 rounded-2xl">
+    <div className="w-full p-5 flex flex-col gap-4 border border-primary-3 rounded-2xl h-full">
       {/* Tab Navigation */}
       <div className="flex flex-row justify-between items-center text-white-3 border-b border-primary-3/20 pb-2">
         <div className="flex flex-row gap-6 items-center text-sm">
@@ -31,6 +48,7 @@ function PreviewSection({ content, isSynced, onSync }: PreviewSectionProps) {
           >
             <FileText size={18} />
             <span className={activeTab === "docx" ? "font-semibold" : ""}>Docx Preview</span>
+            {!isSynced && <div className="absolute top-[-2px] right-[-6px] w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />}
           </div>
           <div
             onClick={() => setActiveTab("settings")}
@@ -41,17 +59,24 @@ function PreviewSection({ content, isSynced, onSync }: PreviewSectionProps) {
             <span className={activeTab === "settings" ? "font-semibold" : ""}>Settings</span>
           </div>
         </div>
+
+        {/* Render FileSelector hanya jika Editor sedang disembunyikan */}
+        {showFileSelector && files && selectedIndex !== undefined && onIndexChange && onContentLoad && (
+          <FileSelector
+            files={files}
+            selectedIndex={selectedIndex}
+            onIndexChange={onIndexChange}
+            onContentLoad={onContentLoad}
+          />
+        )}
       </div>
 
       <div className="relative min-h-80 flex flex-col">
         {activeTab === "markdown" && (
           <div className="relative group">
-            <textarea
-              className="w-full h-120 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent"
-              readOnly
-              placeholder="Markdown preview will appear here..."
-              value={content}
-            />
+            <div className="w-full h-120 bg-gray-2 p-6 rounded-lg overflow-y-auto custom-scrollbar border border-transparent">
+              <MarkdownRenderer content={content} />
+            </div>
           </div>
         )}
 
@@ -63,7 +88,7 @@ function PreviewSection({ content, isSynced, onSync }: PreviewSectionProps) {
               </div>
               <div className="space-y-2">
                 <h3 className="text-white-1 font-bold text-lg">External Docx Preview</h3>
-                <p className="text-white-4 text-xs max-w-xs mx-auto leading-relaxed">
+                <p className="text-white-4 text-xs max-w-xs mx-auto leading-relaxed text-white-3">
                   To save resources, real-time Docx rendering is handled in a dedicated viewer.
                 </p>
               </div>
@@ -74,7 +99,6 @@ function PreviewSection({ content, isSynced, onSync }: PreviewSectionProps) {
                 href="/preview"
                 target="_blank"
                 onClick={(e) => {
-                  // Mocking sync before opening
                   onSync();
                 }}
                 className="bg-primary-2 hover:bg-primary-1 text-white-1 px-8 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary-2/20"

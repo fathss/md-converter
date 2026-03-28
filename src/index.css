@@ -18,3 +18,24 @@
     @apply tracking-widest;
   }
 }
+
+@layer components {
+  .markdown-body ul {
+    list-style-type: disc !important;
+  }
+
+  .markdown-body ol {
+    list-style-type: decimal !important;
+  }
+
+  .markdown-body li {
+    display: list-item !important;
+  }
+
+  .markdown-body blockquote {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    padding: 0.5em 1em !important;
+    border-left: 0.25em solid #30363d !important;
+    color: #8b949e !important;
+  }
+}
