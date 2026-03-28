@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Eye, Settings, FileText, ExternalLink, Info } from "lucide-react"
+import { Eye, Settings, FileText, ExternalLink, Info, ChevronDown } from "lucide-react"
 import DocxSettings from "./DocxSettings"
 
 interface PreviewSectionProps {
@@ -47,12 +47,11 @@ function PreviewSection({ content, isSynced, onSync }: PreviewSectionProps) {
         {activeTab === "markdown" && (
           <div className="relative group">
             <textarea
-              className="w-full h-120 bg-gray-2 p-6 rounded-lg text-white-1 outline-none resize-none border border-transparent"
+              className="w-full h-120 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent"
               readOnly
               placeholder="Markdown preview will appear here..."
               value={content}
             />
-            <div className="absolute bottom-4 right-4 bg-primary-1 text-[10px] px-2 py-1 rounded text-white-1 uppercase tracking-tighter font-bold">Live</div>
           </div>
         )}
 

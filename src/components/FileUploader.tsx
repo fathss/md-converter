@@ -3,16 +3,47 @@ import FileDropzone from "./FileDropzone";
 import FileItem from "./FileItem";
 import { FilePlus, RefreshCw } from "lucide-react";
 
-function FileUploader() {
-  const [files, setFiles] = useState<File[]>([]);
+interface FileUploaderProps {
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  onContentLoad: (content: string) => void;
+  onIndexChange: (index: number) => void;
+}
+
+function FileUploader({ files, setFiles, onContentLoad, onIndexChange }: FileUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const readFileContent = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result;
+      if (typeof text === "string") onContentLoad(text);
+    };
+    reader.readAsText(file);
+  };
+
   const handleFilesSelect = (newFiles: File[]) => {
-    setFiles((prev) => [...prev, ...newFiles]);
+    setFiles((prev) => {
+        const updatedFiles = [...prev, ...newFiles];
+        // Jika sebelumnya kosong, baca file pertama yang masuk
+        if (prev.length === 0 && newFiles.length > 0) {
+            readFileContent(newFiles[0]);
+            onIndexChange(0);
+        }
+        return updatedFiles;
+    });
   };
 
   const handleRemoveFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+        const updated = prev.filter((_, i) => i !== index);
+        if (updated.length > 0) {
+            // Jika menghapus file yang sedang dipilih atau file sebelumnya
+            onIndexChange(0); 
+            readFileContent(updated[0]);
+        }
+        return updated;
+    });
   };
 
   const handleAddMoreClick = () => {
