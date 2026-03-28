@@ -35,7 +35,7 @@ function EditSection({
             </div>
 
             <textarea
-                className="w-full h-120 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent focus:border-primary-2 transition-all"
+                className="w-full h-120 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent focus:border-primary-2 transition-all font-mono leading-relaxed"
                 placeholder="Write your markdown here..."
                 value={content}
                 onChange={(e) => onChange(e.target.value)}

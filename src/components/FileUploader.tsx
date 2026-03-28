@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import FileDropzone from "./FileDropzone";
 import FileItem from "./FileItem";
-import { FilePlus, RefreshCw } from "lucide-react";
+import { FilePlus, Download } from "lucide-react";
 
 interface FileUploaderProps {
   files: File[];
@@ -24,25 +24,25 @@ function FileUploader({ files, setFiles, onContentLoad, onIndexChange }: FileUpl
 
   const handleFilesSelect = (newFiles: File[]) => {
     setFiles((prev) => {
-        const updatedFiles = [...prev, ...newFiles];
-        // Jika sebelumnya kosong, baca file pertama yang masuk
-        if (prev.length === 0 && newFiles.length > 0) {
-            readFileContent(newFiles[0]);
-            onIndexChange(0);
-        }
-        return updatedFiles;
+      const updatedFiles = [...prev, ...newFiles];
+      // Jika sebelumnya kosong, baca file pertama yang masuk
+      if (prev.length === 0 && newFiles.length > 0) {
+        readFileContent(newFiles[0]);
+        onIndexChange(0);
+      }
+      return updatedFiles;
     });
   };
 
   const handleRemoveFile = (index: number) => {
     setFiles((prev) => {
-        const updated = prev.filter((_, i) => i !== index);
-        if (updated.length > 0) {
-            // Jika menghapus file yang sedang dipilih atau file sebelumnya
-            onIndexChange(0); 
-            readFileContent(updated[0]);
-        }
-        return updated;
+      const updated = prev.filter((_, i) => i !== index);
+      if (updated.length > 0) {
+        // Jika menghapus file yang sedang dipilih atau file sebelumnya
+        onIndexChange(0);
+        readFileContent(updated[0]);
+      }
+      return updated;
     });
   };
 
@@ -106,11 +106,11 @@ function FileUploader({ files, setFiles, onContentLoad, onIndexChange }: FileUpl
 
             <div
               onClick={handleConvert}
-              className="flex flex-row gap-2 items-center bg-primary-2 p-3 px-5 rounded-lg cursor-pointer hover:bg-primary-2/80 transition-colors"
+              className="flex flex-row gap-2 items-center bg-primary-2 p-3 px-5 rounded-lg cursor-pointer hover:bg-primary-2/80 transition-colors shadow-lg shadow-primary-2/10"
             >
-              <RefreshCw className="text-white-2" size={18} />
+              <Download className="text-white-2" size={18} />
               <p className="text-sm text-white-2 font-semibold">
-                {files.length === 1 ? "Convert" : "Convert All"}
+                {files.length === 1 ? "Download Docx" : "Download All"}
               </p>
             </div>
           </div>
