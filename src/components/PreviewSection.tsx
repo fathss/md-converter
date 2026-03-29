@@ -6,8 +6,6 @@ import FileSelector from "./FileSelector"
 
 interface PreviewSectionProps {
   content: string;
-  isSynced: boolean;
-  onSync: () => void;
   // Props baru untuk FileSelector
   showFileSelector?: boolean;
   files?: File[];
@@ -18,8 +16,6 @@ interface PreviewSectionProps {
 
 function PreviewSection({
   content,
-  isSynced,
-  onSync,
   showFileSelector,
   files,
   selectedIndex,
@@ -48,7 +44,6 @@ function PreviewSection({
           >
             <FileText size={18} />
             <span className={activeTab === "docx" ? "font-semibold" : ""}>Docx Preview</span>
-            {!isSynced && <div className="absolute top-[-2px] right-[-6px] w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />}
           </div>
           <div
             onClick={() => setActiveTab("settings")}
@@ -98,9 +93,6 @@ function PreviewSection({
               <a
                 href="/preview"
                 target="_blank"
-                onClick={(e) => {
-                  onSync();
-                }}
                 className="bg-primary-2 hover:bg-primary-1 text-white-1 px-8 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary-2/20"
               >
                 <ExternalLink size={16} />

@@ -10,21 +10,21 @@ function MainPage() {
 
   return (
     <>
-      <div className="w-4xl flex flex-col items-center gap-8">
+      <div className="w-6xl flex flex-col items-center gap-8">
         <Title />
-        <FileUploader 
-            files={files} 
-            setFiles={setFiles} 
-            onContentLoad={setMarkdownContent} 
-            onIndexChange={setSelectedIndex}
+        <FileUploader
+          files={files}
+          setFiles={setFiles}
+          onContentLoad={setMarkdownContent}
+          onIndexChange={setSelectedIndex}
         />
-        <FileWorkspace 
-            externalContent={markdownContent} 
-            onExternalContentChange={setMarkdownContent} 
-            files={files}
-            selectedIndex={selectedIndex}
-            onIndexChange={setSelectedIndex}
-            onContentLoad={setMarkdownContent}
+        <FileWorkspace
+          externalContent={markdownContent}
+          onExternalContentChange={setMarkdownContent}
+          files={files}
+          selectedIndex={selectedIndex}
+          onIndexChange={setSelectedIndex}
+          onContentLoad={setMarkdownContent}
         />
       </div>
     </>

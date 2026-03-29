@@ -20,7 +20,6 @@ function FileWorkspace({
   onIndexChange,
   onContentLoad
 }: FileWorkspaceProps) {
-  const [isSynced, setIsSynced] = useState(true)
   const [leftWidth, setLeftWidth] = useState(40);
   const [showEditor, setShowEditor] = useState(true);
   const isResizing = useRef(false);
@@ -28,11 +27,6 @@ function FileWorkspace({
 
   const handleContentChange = (content: string) => {
     onExternalContentChange(content)
-    setIsSynced(false)
-  }
-
-  const handleSync = () => {
-    setIsSynced(true)
   }
 
   const startResizing = () => {
@@ -113,8 +107,6 @@ function FileWorkspace({
         <div className="flex-1 min-w-0 transition-all duration-300">
           <PreviewSection
             content={externalContent}
-            isSynced={isSynced}
-            onSync={handleSync}
             showFileSelector={!showEditor}
             files={files}
             selectedIndex={selectedIndex}

@@ -36,3 +36,7 @@ vite.config.ts.timestamp-*
 *.njsproj
 *.sln
 *.sw?
+
+# Python folders and files
+.venv/
+__pycache__

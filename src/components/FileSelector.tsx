@@ -8,11 +8,11 @@ interface FileSelectorProps {
     onContentLoad: (content: string) => void;
 }
 
-function FileSelector({ 
-    files, 
-    selectedIndex, 
-    onIndexChange, 
-    onContentLoad 
+function FileSelector({
+    files,
+    selectedIndex,
+    onIndexChange,
+    onContentLoad
 }: FileSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -55,11 +55,10 @@ function FileSelector({
                             <div
                                 key={`${file.name}-${idx}`}
                                 onClick={() => handleFileSwitch(idx)}
-                                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-xs transition-colors ${
-                                    idx === selectedIndex
-                                    ? "bg-primary-2 text-white-1"
-                                    : "text-white-4 hover:bg-gray-3 hover:text-white-2"
-                                }`}
+                                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-xs transition-colors ${idx === selectedIndex
+                                        ? "bg-primary-2 text-white-1"
+                                        : "text-white-4 hover:bg-gray-3 hover:text-white-2"
+                                    }`}
                             >
                                 <FileText size={14} />
                                 <p className="truncate">{file.name}</p>
