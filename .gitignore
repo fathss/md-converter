@@ -40,3 +40,10 @@ vite.config.ts.timestamp-*
 # Python folders and files
 .venv/
 __pycache__
+
+# Misc
+*test*.md
+required-package.md
+.github/
+*.docx
+GEMINI.md

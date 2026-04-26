@@ -6,6 +6,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pypandoc
+from pydantic import BaseModel
 import math
 
 app = FastAPI()
@@ -21,74 +22,74 @@ app.add_middleware(
 # Temporary in-memory storage 
 in_memory_store = {}
 
-def get_readable_size(bytes_size: int) -> str:
-    if bytes_size == 0: 
-        return "0 Bytes"
-    
-    units = ("Bytes", "KB", "MB", "GB")
-    unit_index = int(math.floor(math.log(bytes_size, 1024)))
-    divisor = math.pow(1024, unit_index)
-    readable_value = round(bytes_size / divisor, 2)
-    return f"{readable_value} {units[unit_index]}"
+def process_and_store_conversion(md_content: str, base_filename: str) -> dict:
+    """
+    Handles the conversion of Markdown content to .docx, stores it in memory, 
+    and returns metadata for retrieval.
+    """
+    # Ensure filename ends with .docx
+    if base_filename.endswith('.md'):
+        base_filename = base_filename.rsplit(".", 1)[0]
+    final_filename = base_filename if base_filename.endswith(".docx") else f"{base_filename}.docx"
 
-@app.post("/convert/")
-async def convert_md_to_docx(file: UploadFile = File(...)):
-    if not file.filename.endswith('.md'):
-        raise HTTPException(status_code=400, detail="Only md file allowed")
-    
-    # Create temporary file
+    # Create temporary file for output
     temp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
     temp_output_path = temp_output.name
     temp_output.close() 
-    
-    try:
-        # Read the md file contents
-        md_content = await file.read()
 
-        # Convert text via pypandoc
-        docx_output = pypandoc.convert_text(
-            md_content.decode("utf-8"), 
+    try:
+        pypandoc.convert_text(
+            md_content, 
             'docx', 
             format='md', 
             extra_args=['--standalone'],
             outputfile=temp_output_path
         )
 
+        # Read values from the generated .docx file
         with open(temp_output_path, "rb") as f:
             docx_bytes = f.read()
 
-        # Store the BytesIO object in dictionary
         buffer = io.BytesIO(docx_bytes)
-
-        # Get file size
-        raw_size = buffer.getbuffer().nbytes
-        readable_size = get_readable_size(raw_size)
-        
-        # Generate unique ID
         file_id = str(uuid.uuid4())
+        size = buffer.getbuffer().nbytes
 
-        original_name = file.filename.rsplit(".", 1)[0]
-
+        # Store in in-memory storage
         in_memory_store[file_id] = {
-            "filename": f"{original_name}.docx",
+            "filename": final_filename,
             "content": buffer,
-            "size": readable_size
+            "size": size
         }
 
         return {
             "file_id": file_id, 
-            "filename": f"{original_name}.docx",
-            "size": readable_size
+            "filename": final_filename,
+            "size": size
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Konversi gagal: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
     finally:
         if os.path.exists(temp_output_path):
             os.remove(temp_output_path)
 
+class MarkdownRequest(BaseModel):
+    content: str
+    filename: str = "document"
+
+@app.post("/convert-text/")
+async def convert_text_to_docx(request: MarkdownRequest) -> dict:
+    return process_and_store_conversion(request.content, request.filename)
+
+@app.post("/convert/")
+async def convert_md_to_docx(file: UploadFile = File(...)) -> dict:
+    if not file.filename.endswith('.md'):
+        raise HTTPException(status_code=400, detail="Only .md files are allowed")
+    
+    content = await file.read()
+    return process_and_store_conversion(content.decode("utf-8"), file.filename)
+
 @app.get("/download/{file_id}")
-async def download_file(file_id: str):
-    # Check if the file exist in storage
+async def download_file(file_id: str) -> StreamingResponse:
     file_data = in_memory_store.get(file_id)
     if not file_data:
         raise HTTPException(status_code=404, detail="File not found or expired")
@@ -101,7 +102,7 @@ async def download_file(file_id: str):
 
     headers = {
         "Content-Disposition": f"attachment; filename={filename}",
-        "Access-Control-Expose-Headers": "Content-Disposition" # Penting untuk frontend
+        "Access-Control-Expose-Headers": "Content-Disposition" # Important for frontend
     }
 
     # Stream the file

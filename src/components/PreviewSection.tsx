@@ -1,12 +1,11 @@
-import { useState } from "react"
-import { Eye, Settings, FileText, ExternalLink } from "lucide-react"
-import DocxSettings from "./DocxSettings"
-import MarkdownRenderer from "./MarkdownRenderer"
-import FileSelector from "./FileSelector"
+import { useState } from "react";
+import { Eye, Settings, FileText, ExternalLink } from "lucide-react";
+import DocxSettings from "./DocxSettings";
+import MarkdownRenderer from "./MarkdownRenderer";
+import FileSelector from "./FileSelector";
 
 interface PreviewSectionProps {
   content: string;
-  // Props baru untuk FileSelector
   showFileSelector?: boolean;
   files?: File[];
   selectedIndex?: number;
@@ -20,9 +19,11 @@ function PreviewSection({
   files,
   selectedIndex,
   onIndexChange,
-  onContentLoad
+  onContentLoad,
 }: PreviewSectionProps) {
-  const [activeTab, setActiveTab] = useState<"markdown" | "docx" | "settings">("markdown")
+  const [activeTab, setActiveTab] = useState<"markdown" | "docx" | "settings">(
+    "markdown",
+  );
 
   return (
     <div className="w-full p-5 flex flex-col gap-4 border border-primary-3 rounded-2xl h-full">
@@ -31,39 +32,58 @@ function PreviewSection({
         <div className="flex flex-row gap-6 items-center text-sm">
           <div
             onClick={() => setActiveTab("markdown")}
-            className={`flex flex-row gap-2 items-center pb-1 cursor-pointer transition-all ${activeTab === "markdown" ? "border-b-2 border-primary-2 text-white-1" : "hover:text-white-1"
-              }`}
+            className={`flex flex-row gap-2 items-center pb-1 cursor-pointer transition-all ${
+              activeTab === "markdown"
+                ? "border-b-2 border-primary-2 text-white-1"
+                : "hover:text-white-1"
+            }`}
           >
             <Eye size={18} />
-            <span className={activeTab === "markdown" ? "font-semibold" : ""}>Live Preview</span>
+            <span className={activeTab === "markdown" ? "font-semibold" : ""}>
+              Live Preview
+            </span>
           </div>
           <div
             onClick={() => setActiveTab("docx")}
-            className={`flex flex-row gap-2 items-center pb-1 cursor-pointer transition-all relative ${activeTab === "docx" ? "border-b-2 border-primary-2 text-white-1" : "hover:text-white-1"
-              }`}
+            className={`flex flex-row gap-2 items-center pb-1 cursor-pointer transition-all relative ${
+              activeTab === "docx"
+                ? "border-b-2 border-primary-2 text-white-1"
+                : "hover:text-white-1"
+            }`}
           >
             <FileText size={18} />
-            <span className={activeTab === "docx" ? "font-semibold" : ""}>Docx Preview</span>
+            <span className={activeTab === "docx" ? "font-semibold" : ""}>
+              Docx Preview
+            </span>
           </div>
           <div
             onClick={() => setActiveTab("settings")}
-            className={`flex flex-row gap-2 items-center pb-1 cursor-pointer transition-all ${activeTab === "settings" ? "border-b-2 border-primary-2 text-white-1" : "hover:text-white-1"
-              }`}
+            className={`flex flex-row gap-2 items-center pb-1 cursor-pointer transition-all ${
+              activeTab === "settings"
+                ? "border-b-2 border-primary-2 text-white-1"
+                : "hover:text-white-1"
+            }`}
           >
             <Settings size={18} />
-            <span className={activeTab === "settings" ? "font-semibold" : ""}>Settings</span>
+            <span className={activeTab === "settings" ? "font-semibold" : ""}>
+              Settings
+            </span>
           </div>
         </div>
 
         {/* Render FileSelector hanya jika Editor sedang disembunyikan */}
-        {showFileSelector && files && selectedIndex !== undefined && onIndexChange && onContentLoad && (
-          <FileSelector
-            files={files}
-            selectedIndex={selectedIndex}
-            onIndexChange={onIndexChange}
-            onContentLoad={onContentLoad}
-          />
-        )}
+        {showFileSelector &&
+          files &&
+          selectedIndex !== undefined &&
+          onIndexChange &&
+          onContentLoad && (
+            <FileSelector
+              files={files}
+              selectedIndex={selectedIndex}
+              onIndexChange={onIndexChange}
+              onContentLoad={onContentLoad}
+            />
+          )}
       </div>
 
       <div className="relative min-h-80 flex flex-col">
@@ -82,9 +102,12 @@ function PreviewSection({
                 <FileText size={48} className="text-primary-2" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-white-1 font-bold text-lg">External Docx Preview</h3>
+                <h3 className="text-white-1 font-bold text-lg">
+                  External Docx Preview
+                </h3>
                 <p className="text-white-4 text-xs max-w-xs mx-auto leading-relaxed text-white-3">
-                  To save resources, real-time Docx rendering is handled in a dedicated viewer.
+                  To save resources, real-time Docx rendering is handled in a
+                  dedicated viewer.
                 </p>
               </div>
             </div>
@@ -102,12 +125,10 @@ function PreviewSection({
           </div>
         )}
 
-        {activeTab === "settings" && (
-          <DocxSettings />
-        )}
+        {activeTab === "settings" && <DocxSettings />}
       </div>
     </div>
-  )
+  );
 }
 
-export default PreviewSection
+export default PreviewSection;

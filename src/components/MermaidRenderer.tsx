@@ -1,10 +1,10 @@
-import { useEffect, useRef, useId } from 'react';
-import mermaid from 'mermaid';
+import { useEffect, useRef, useId } from "react";
+import mermaid from "mermaid";
 
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'dark',
-  securityLevel: 'loose',
+  theme: "dark",
+  securityLevel: "loose",
 });
 
 interface MermaidRendererProps {
@@ -14,7 +14,7 @@ interface MermaidRendererProps {
 function MermaidRenderer({ chart }: MermaidRendererProps) {
   const ref = useRef<HTMLDivElement>(null);
   const uId = useId();
-  const cleanId = uId.replace(/:/g, 'm');
+  const cleanId = uId.replace(/:/g, "m");
 
   useEffect(() => {
     let isMounted = true;
@@ -23,7 +23,7 @@ function MermaidRenderer({ chart }: MermaidRendererProps) {
       if (!ref.current || !chart) return;
 
       try {
-        ref.current.innerHTML = '';
+        ref.current.innerHTML = "";
 
         const { svg } = await mermaid.render(`mermaid-${cleanId}`, chart);
 
@@ -31,9 +31,10 @@ function MermaidRenderer({ chart }: MermaidRendererProps) {
           ref.current.innerHTML = svg;
         }
       } catch (error) {
-        console.error('Mermaid error:', error);
+        console.error("Mermaid error:", error);
         if (isMounted && ref.current) {
-          ref.current.innerHTML = '<p class="text-red-400 text-[10px] italic">Mermaid syntax error</p>';
+          ref.current.innerHTML =
+            '<p class="text-red-400 text-[10px] italic">Mermaid syntax error</p>';
         }
       }
     };

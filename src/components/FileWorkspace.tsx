@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react"
-import EditSection from "./EditSection"
-import PreviewSection from "./PreviewSection"
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { useState, useRef, useEffect } from "react";
+import EditSection from "./EditSection";
+import PreviewSection from "./PreviewSection";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 interface FileWorkspaceProps {
   externalContent: string;
@@ -18,7 +18,7 @@ function FileWorkspace({
   files,
   selectedIndex,
   onIndexChange,
-  onContentLoad
+  onContentLoad,
 }: FileWorkspaceProps) {
   const [leftWidth, setLeftWidth] = useState(40);
   const [showEditor, setShowEditor] = useState(true);
@@ -26,26 +26,27 @@ function FileWorkspace({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleContentChange = (content: string) => {
-    onExternalContentChange(content)
-  }
+    onExternalContentChange(content);
+  };
 
   const startResizing = () => {
     isResizing.current = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
   };
 
   const stopResizing = () => {
     isResizing.current = false;
-    document.body.style.cursor = 'default';
-    document.body.style.userSelect = 'auto';
+    document.body.style.cursor = "default";
+    document.body.style.userSelect = "auto";
   };
 
   const onMouseMove = (e: MouseEvent) => {
     if (!isResizing.current || !containerRef.current || !showEditor) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const newWidthPercent = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    const newWidthPercent =
+      ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
     if (newWidthPercent >= 25 && newWidthPercent <= 45) {
       setLeftWidth(newWidthPercent);
@@ -53,11 +54,11 @@ function FileWorkspace({
   };
 
   useEffect(() => {
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', stopResizing);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", stopResizing);
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', stopResizing);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", stopResizing);
     };
   }, [showEditor]);
 
@@ -71,17 +72,21 @@ function FileWorkspace({
           title={showEditor ? "Hide Editor" : "Show Editor"}
         >
           <span>{showEditor ? "Hide Editor" : "Show Editor"}</span>
-          {showEditor ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+          {showEditor ? (
+            <PanelLeftClose size={16} />
+          ) : (
+            <PanelLeftOpen size={16} />
+          )}
         </button>
       </div>
 
-      <div
-        ref={containerRef}
-        className="w-full flex flex-row items-stretch"
-      >
+      <div ref={containerRef} className="w-full flex flex-row items-stretch">
         {/* Left Panel: Editor */}
         {showEditor && (
-          <div style={{ width: `${leftWidth}%` }} className="shrink-0 transition-all duration-300">
+          <div
+            style={{ width: `${leftWidth}%` }}
+            className="shrink-0 transition-all duration-300"
+          >
             <EditSection
               content={externalContent}
               onChange={handleContentChange}
@@ -116,7 +121,7 @@ function FileWorkspace({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default FileWorkspace
+export default FileWorkspace;

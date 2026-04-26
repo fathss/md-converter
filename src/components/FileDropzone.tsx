@@ -43,9 +43,9 @@ function FileDropzone({ onFilesSelect }: FileDropzoneProps) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`w-full h-32 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 ${
-        isDragging 
-        ? "border-primary-2 bg-primary-2/5 scale-[1.01]" 
-        : "border-white-4/20 hover:border-white-4/40 bg-transparent"
+        isDragging
+          ? "border-primary-2 bg-primary-2/5 scale-[1.01]"
+          : "border-white-4/20 hover:border-white-4/40 bg-transparent"
       }`}
     >
       <input
@@ -54,12 +54,16 @@ function FileDropzone({ onFilesSelect }: FileDropzoneProps) {
         onChange={handleFileChange}
         className="hidden"
         accept=".md"
-        multiple
       />
       <div className="flex flex-col items-center justify-center gap-2">
         <div className="flex flex-col items-center justify-center gap-2">
-          <Upload className={isDragging ? "text-primary-2" : "text-white-3"} size={20} />
-          <p className={`text-sm font-semibold ${isDragging ? "text-primary-2" : "text-white-2"}`}>
+          <Upload
+            className={isDragging ? "text-primary-2" : "text-white-3"}
+            size={20}
+          />
+          <p
+            className={`text-sm font-semibold ${isDragging ? "text-primary-2" : "text-white-2"}`}
+          >
             Upload Files
           </p>
         </div>
