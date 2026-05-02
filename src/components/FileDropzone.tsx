@@ -1,9 +1,6 @@
 import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
-
-interface FileDropzoneProps {
-  onFilesSelect: (files: File[]) => void;
-}
+import type { FileDropzoneProps } from "../types/components";
 
 function FileDropzone({ onFilesSelect }: FileDropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,9 +66,9 @@ function FileDropzone({ onFilesSelect }: FileDropzoneProps) {
         </div>
         <div className="flex flex-col items-center justify-center gap-2">
           <p className="text-center text-white-4 text-xs">
-            Drag & drop markdown files here
+            Drag & drop markdown file here
             <br />
-            or click to select files
+            or click to select file
           </p>
         </div>
       </div>

@@ -1,22 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import EditSection from "./EditSection";
 import PreviewSection from "./PreviewSection";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-
-interface FileWorkspaceProps {
-  externalContent: string;
-  onExternalContentChange: (content: string) => void;
-  files: File[];
-  selectedIndex: number;
-  onIndexChange: (index: number) => void;
-  onContentLoad: (content: string) => void;
-}
+import type { FileWorkspaceProps } from "../types/components";
 
 function FileWorkspace({
   externalContent,
   onExternalContentChange,
-  files,
-  selectedIndex,
+  files = [],
+  selectedIndex = 0,
   onIndexChange,
   onContentLoad,
 }: FileWorkspaceProps) {
@@ -24,9 +16,59 @@ function FileWorkspace({
   const [showEditor, setShowEditor] = useState(true);
   const isResizing = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const editorScrollRef = useRef<HTMLTextAreaElement>(null);
+  const previewScrollRef = useRef<HTMLDivElement>(null);
+  const isSyncingScroll = useRef(false);
 
   const handleContentChange = (content: string) => {
     onExternalContentChange(content);
+  };
+
+  const syncScroll = (
+    source: "editor" | "preview",
+    scrollTop: number,
+    scrollHeight: number,
+    clientHeight: number,
+  ) => {
+    if (isSyncingScroll.current) return;
+
+    const sourceScrollableHeight = scrollHeight - clientHeight;
+    if (sourceScrollableHeight <= 0) return;
+
+    const targetElement =
+      source === "editor" ? previewScrollRef.current : editorScrollRef.current;
+    if (!targetElement) return;
+
+    const targetScrollableHeight =
+      targetElement.scrollHeight - targetElement.clientHeight;
+    if (targetScrollableHeight <= 0) return;
+
+    const ratio = scrollTop / sourceScrollableHeight;
+    isSyncingScroll.current = true;
+    targetElement.scrollTop = ratio * targetScrollableHeight;
+    window.requestAnimationFrame(() => {
+      isSyncingScroll.current = false;
+    });
+  };
+
+  const handleEditorScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    const target = e.currentTarget;
+    syncScroll(
+      "editor",
+      target.scrollTop,
+      target.scrollHeight,
+      target.clientHeight,
+    );
+  };
+
+  const handlePreviewScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    syncScroll(
+      "preview",
+      target.scrollTop,
+      target.scrollHeight,
+      target.clientHeight,
+    );
   };
 
   const startResizing = () => {
@@ -35,23 +77,41 @@ function FileWorkspace({
     document.body.style.userSelect = "none";
   };
 
-  const stopResizing = () => {
+  const stopResizing = useCallback(() => {
     isResizing.current = false;
     document.body.style.cursor = "default";
     document.body.style.userSelect = "auto";
-  };
+  }, []);
 
-  const onMouseMove = (e: MouseEvent) => {
-    if (!isResizing.current || !containerRef.current || !showEditor) return;
+  const onMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing.current || !containerRef.current || !showEditor) return;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      // Clamp resizing using pixel limits to avoid shrinking toolbar areas
+      const minLeftPx = 400; // preferred minimum for editor panel
+      const maxLeftPx = 640; // preferred maximum for editor panel
+      const minRightPx = 360; // preferred minimum for preview panel to keep toolbars visible
+      const totalPx = containerRect.width;
+      let newLeftPx = e.clientX - containerRect.left;
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const newWidthPercent =
-      ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      let effectiveMinPx: number;
+      let effectiveMaxPx: number;
+      if (totalPx >= minLeftPx + minRightPx) {
+        // normal case: reserve min pixels for both panels
+        effectiveMinPx = minLeftPx;
+        effectiveMaxPx = Math.min(maxLeftPx, totalPx - minRightPx);
+      } else {
+        // small screens: fall back to percentage but avoid extreme collapse
+        effectiveMinPx = Math.max(140, totalPx * 0.28);
+        effectiveMaxPx = Math.max(effectiveMinPx + 1, totalPx - 120);
+      }
 
-    if (newWidthPercent >= 25 && newWidthPercent <= 45) {
+      newLeftPx = Math.max(effectiveMinPx, Math.min(effectiveMaxPx, newLeftPx));
+      const newWidthPercent = (newLeftPx / totalPx) * 100;
       setLeftWidth(newWidthPercent);
-    }
-  };
+    },
+    [showEditor],
+  );
 
   useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
@@ -60,7 +120,7 @@ function FileWorkspace({
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", stopResizing);
     };
-  }, [showEditor]);
+  }, [onMouseMove, stopResizing]);
 
   return (
     <div className="w-full flex flex-col gap-2">
@@ -90,6 +150,8 @@ function FileWorkspace({
             <EditSection
               content={externalContent}
               onChange={handleContentChange}
+              onScroll={handleEditorScroll}
+              scrollRef={editorScrollRef}
               files={files}
               selectedIndex={selectedIndex}
               onIndexChange={onIndexChange}
@@ -112,7 +174,8 @@ function FileWorkspace({
         <div className="flex-1 min-w-0 transition-all duration-300">
           <PreviewSection
             content={externalContent}
-            showFileSelector={!showEditor}
+            onScroll={handlePreviewScroll}
+            scrollRef={previewScrollRef}
             files={files}
             selectedIndex={selectedIndex}
             onIndexChange={onIndexChange}

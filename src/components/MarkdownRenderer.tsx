@@ -11,6 +11,7 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import "katex/dist/katex.min.css";
 import "github-markdown-css/github-markdown-dark.css";
 import MermaidRenderer from "./MermaidRenderer";
+import type { MarkdownRendererProps } from "../types/components";
 
 const customSchema = {
   ...defaultSchema,
@@ -21,10 +22,6 @@ const customSchema = {
     input: ["type", "checked", "disabled", "readOnly"],
   },
 };
-
-interface MarkdownRendererProps {
-  content: string;
-}
 
 function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (

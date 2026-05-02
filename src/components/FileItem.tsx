@@ -1,11 +1,5 @@
 import { Settings, XCircle } from "lucide-react";
-
-interface FileItemProps {
-  filename: string;
-  fileSize: number;
-  isConverting: boolean;
-  onRemove: () => void;
-}
+import type { FileItemProps } from "../types/components";
 
 function FileItem({
   filename,

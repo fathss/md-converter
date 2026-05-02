@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { ChevronRight, FileText } from "lucide-react";
-
-interface FileSelectorProps {
-  files: File[];
-  selectedIndex: number;
-  onIndexChange: (index: number) => void;
-  onContentLoad: (content: string) => void;
-}
+import type { FileSelectorProps } from "../types/components";
 
 function FileSelector({
   files,

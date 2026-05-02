@@ -1,23 +1,55 @@
-import { Edit, Trash2 } from "lucide-react";
-import FileSelector from "./FileSelector";
-
-interface EditSectionProps {
-  content: string;
-  onChange: (content: string) => void;
-  files: File[];
-  selectedIndex: number;
-  onIndexChange: (index: number) => void;
-  onContentLoad: (content: string) => void;
-}
+import { useEffect, useMemo, useState } from "react";
+import { Edit, Trash2, Save, Copy } from "lucide-react";
+import type { EditSectionProps } from "../types/components";
 
 function EditSection({
   content,
   onChange,
+  onScroll,
+  scrollRef,
   files,
-  selectedIndex,
-  onIndexChange,
-  onContentLoad,
+  selectedIndex = 0,
 }: EditSectionProps) {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const selectedFileName = files?.[selectedIndex]?.name;
+
+  const markdownFileName = useMemo(() => {
+    const baseName = selectedFileName
+      ? selectedFileName.replace(/\.(md|markdown)$/i, "")
+      : "document";
+    return `${baseName || "document"}.md`;
+  }, [selectedFileName]);
+
+  useEffect(() => {
+    if (!isCopied) return;
+    const timeoutId = window.setTimeout(() => setIsCopied(false), 1400);
+    return () => window.clearTimeout(timeoutId);
+  }, [isCopied]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setIsCopied(true);
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
+  };
+
+  const handleSave = () => {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = markdownFileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+  };
+
+  const copyLabel = isCopied ? "Copied" : "Copy";
+
   return (
     <div className="w-full p-5 flex flex-col gap-4 border border-primary-3 rounded-2xl relative h-full">
       <div className="flex flex-row justify-between items-center text-white-3 border-b border-primary-3/20 pb-2">
@@ -26,34 +58,47 @@ function EditSection({
           <h2 className="text-sm font-semibold">Editor</h2>
         </div>
 
-        <FileSelector
-          files={files}
-          selectedIndex={selectedIndex}
-          onIndexChange={onIndexChange}
-          onContentLoad={onContentLoad}
-        />
+        <div className="flex items-center gap-3">
+          <button
+            title="Clear"
+            className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-red-600/10 hover:text-white-3 transition-colors cursor-pointer"
+            onClick={() => onChange("")}
+          >
+            <Trash2 size={14} />
+            <span className="text-xs">Clear</span>
+          </button>
+
+          <button
+            title="Copy"
+            className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-primary-3/10 hover:text-white-3 transition-colors cursor-pointer"
+            onClick={handleCopy}
+          >
+            <Copy size={14} className={isCopied ? "text-primary-2" : ""} />
+            <span className="text-xs">{copyLabel}</span>
+          </button>
+
+          <button
+            title="Save"
+            className="flex items-center gap-2 px-3 py-1 rounded-md bg-primary-3/20 hover:bg-primary-3/30 hover:text-white-3 transition-colors cursor-pointer"
+            onClick={handleSave}
+          >
+            <Save size={14} />
+            <span className="text-xs">Save</span>
+          </button>
+        </div>
       </div>
 
       <textarea
-        className="w-full h-120 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent focus:border-primary-2 transition-all font-mono leading-relaxed"
+        className="w-full h-200 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent focus:border-primary-2 transition-all font-mono leading-relaxed"
         placeholder="Write your markdown here..."
         value={content}
         onChange={(e) => onChange(e.target.value)}
+        onScroll={onScroll}
+        ref={scrollRef}
       />
 
       <div className="flex justify-between items-center text-xs text-white-4 px-1">
         <p>Characters: {content.replace(/[\s#\\*]/g, "").length}</p>
-        <button
-          onClick={() => onChange("")}
-          className="flex items-center gap-1.5 hover:text-red-400 transition-colors cursor-pointer group"
-          title="Clear editor"
-        >
-          <Trash2
-            size={14}
-            className="group-hover:scale-110 transition-transform"
-          />
-          <span>Clear</span>
-        </button>
       </div>
     </div>
   );

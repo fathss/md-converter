@@ -1,15 +1,12 @@
 import { useEffect, useRef, useId } from "react";
 import mermaid from "mermaid";
+import type { MermaidRendererProps } from "../types/components";
 
 mermaid.initialize({
   startOnLoad: false,
   theme: "dark",
   securityLevel: "loose",
 });
-
-interface MermaidRendererProps {
-  chart: string;
-}
 
 function MermaidRenderer({ chart }: MermaidRendererProps) {
   const ref = useRef<HTMLDivElement>(null);
