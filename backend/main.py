@@ -1,7 +1,9 @@
 import io
 import os
+import re
 import uuid
 import tempfile
+import subprocess
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +24,38 @@ app.add_middleware(
 # Temporary in-memory storage 
 in_memory_store = {}
 
+def render_mermaid(mmd_path, output_path):
+    result = subprocess.run(
+        ["mmdc", "-i", mmd_path, "-o", output_path],
+        capture_output=True,
+        text=True,
+        timeout=10
+    )
+    if result.returncode != 0:
+        raise Exception(f"Mermaid render failed: {result.stderr}")
+
+def process_mermaid_blocks(md_content: str, tmp_dir: str) -> str:
+    pattern = r"```mermaid\s*([\s\S]*?)```"
+
+    def replacer(match):
+        block = match.group(1).strip()
+
+        mmd_filename = f"{uuid.uuid4()}.mmd"
+        img_filename = f"{uuid.uuid4()}.png"
+
+        mmd_path = os.path.join(tmp_dir, mmd_filename)
+        img_path = os.path.join(tmp_dir, img_filename)
+
+        with open(mmd_path, "w") as f:
+            f.write(block)
+
+        render_mermaid(mmd_path, img_path)
+
+        return f"![diagram]({img_filename})"
+        print(md_content)
+
+    return re.sub(pattern, replacer, md_content)
+
 def process_and_store_conversion(md_content: str, base_filename: str) -> dict:
     """
     Handles the conversion of Markdown content to .docx, stores it in memory, 
@@ -38,13 +72,24 @@ def process_and_store_conversion(md_content: str, base_filename: str) -> dict:
     temp_output.close() 
 
     try:
-        pypandoc.convert_text(
-            md_content, 
-            'docx', 
-            format='md', 
-            extra_args=['--standalone'],
-            outputfile=temp_output_path
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # preprocess mermaid
+            md_content = process_mermaid_blocks(md_content, tmpdir)
+
+            # write processed markdown to temp file
+            md_input_path = os.path.join(tmpdir, "input.md")
+            with open(md_input_path, "w") as f:
+                f.write(md_content)
+
+            pypandoc.convert_file(
+                md_input_path,
+                'docx',
+                extra_args=[
+                    '--standalone',
+                    f'--resource-path={tmpdir}'
+                ],
+                outputfile=temp_output_path
+            )
 
         # Read values from the generated .docx file
         with open(temp_output_path, "rb") as f:
