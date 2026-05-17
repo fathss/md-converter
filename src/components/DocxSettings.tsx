@@ -10,76 +10,60 @@ function DocxSettings({
   initialSettings,
   onSettingsChange,
 }: DocxSettingsProps) {
-  const [fileName, setFileName] = useState(initialSettings.fileName);
+  const [filename, setFileName] = useState(initialSettings.filename);
   const [template, setTemplate] = useState(initialSettings.template);
   const [includeToc, setIncludeToc] = useState(initialSettings.includeToc);
-  const [includeFooter, setIncludeFooter] = useState(
-    initialSettings.includeFooter,
+  const [includePageNumbers, setIncludePageNumbers] = useState(
+    initialSettings.includePageNumbers,
   );
-  const [footerText, setFooterText] = useState(initialSettings.footerText);
 
   const publishSettings = (nextSettings: DocxExportSettings) => {
     onSettingsChange?.(nextSettings);
   };
 
   const resolvedFileName = useMemo(() => {
-    const cleaned = normalizeDocxBaseName(fileName);
+    const cleaned = normalizeDocxBaseName(filename);
     return `${cleaned || "document"}.docx`;
-  }, [fileName]);
+  }, [filename]);
 
   const updateFileName = (value: string) => {
     const normalized = normalizeDocxBaseName(value);
     setFileName(normalized);
     publishSettings({
-      fileName: normalized,
+      filename: normalized,
       template,
       includeToc,
-      includeFooter,
-      footerText,
+      includePageNumbers,
     });
   };
 
-  const updateTemplate = (value: "academic" | "modern") => {
+  const updateTemplate = (value: "academic" | "default") => {
     setTemplate(value);
     publishSettings({
-      fileName,
+      filename,
       template: value,
       includeToc,
-      includeFooter,
-      footerText,
+      includePageNumbers,
     });
   };
 
   const updateIncludeToc = (value: boolean) => {
     setIncludeToc(value);
     publishSettings({
-      fileName,
+      filename,
       template,
       includeToc: value,
-      includeFooter,
-      footerText,
+      includePageNumbers,
     });
   };
 
-  const updateIncludeFooter = (value: boolean) => {
-    setIncludeFooter(value);
+  const updateIncludePageNumbers = (value: boolean) => {
+    setIncludePageNumbers(value);
     publishSettings({
-      fileName,
+      filename,
       template,
       includeToc,
-      includeFooter: value,
-      footerText,
-    });
-  };
-
-  const updateFooterText = (value: string) => {
-    setFooterText(value);
-    publishSettings({
-      fileName,
-      template,
-      includeToc,
-      includeFooter,
-      footerText: value,
+      includePageNumbers: value,
     });
   };
 
@@ -95,7 +79,7 @@ function DocxSettings({
         <div className="flex flex-col gap-2">
           <input
             type="text"
-            value={fileName}
+            value={filename}
             onChange={(e) => updateFileName(e.target.value)}
             placeholder="Enter file name"
             className="bg-gray-3 border border-primary-3 rounded-md p-2 text-sm outline-none focus:border-primary-2"
@@ -115,12 +99,12 @@ function DocxSettings({
         <select
           value={template}
           onChange={(e) =>
-            updateTemplate(e.target.value as "academic" | "modern")
+            updateTemplate(e.target.value as "academic" | "default")
           }
           className="bg-gray-3 border border-primary-3 rounded-md p-2 text-sm outline-none focus:border-primary-2 cursor-pointer transition-colors"
         >
           <option value="academic">Academic Paper</option>
-          <option value="modern">Modern Report</option>
+          <option value="default">Default</option>
         </select>
       </div>
 
@@ -147,34 +131,16 @@ function DocxSettings({
           <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
-              checked={includeFooter}
-              onChange={(e) => updateIncludeFooter(e.target.checked)}
+              checked={includePageNumbers}
+              onChange={(e) => updateIncludePageNumbers(e.target.checked)}
               className="w-4 h-4 rounded border-primary-3 bg-gray-3 checked:bg-primary-2 accent-primary-2"
             />
             <span className="text-sm text-white-3 group-hover:text-white-1 transition-colors">
-              Footer Text
+              Page Numbers
             </span>
           </label>
         </div>
       </div>
-
-      {includeFooter ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-primary-2">
-            <FileText size={18} />
-            <h3 className="text-sm font-bold uppercase tracking-wider">
-              Footer Content
-            </h3>
-          </div>
-          <input
-            type="text"
-            value={footerText}
-            onChange={(e) => updateFooterText(e.target.value)}
-            placeholder="e.g. Confidential • 2026"
-            className="bg-gray-3 border border-primary-3 rounded-md p-2 text-sm outline-none focus:border-primary-2"
-          />
-        </div>
-      ) : null}
     </div>
   );
 }

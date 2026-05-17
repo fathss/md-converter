@@ -8,8 +8,9 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pypandoc
-from pydantic import BaseModel
 import math
+
+from base_model.markdown_request import MarkdownRequest
 
 app = FastAPI()
 
@@ -56,11 +57,14 @@ def process_mermaid_blocks(md_content: str, tmp_dir: str) -> str:
 
     return re.sub(pattern, replacer, md_content)
 
-def process_and_store_conversion(md_content: str, base_filename: str) -> dict:
+def process_and_store_conversion(request: MarkdownRequest) -> dict:
     """
     Handles the conversion of Markdown content to .docx, stores it in memory, 
     and returns metadata for retrieval.
     """
+    base_filename = request.settings.filename
+    md_content = request.content
+
     # Ensure filename ends with .docx
     if base_filename.endswith('.md'):
         base_filename = base_filename.rsplit(".", 1)[0]
@@ -81,11 +85,15 @@ def process_and_store_conversion(md_content: str, base_filename: str) -> dict:
             with open(md_input_path, "w") as f:
                 f.write(md_content)
 
+            docx_template = request.settings.template
+            print(docx_template)
+
             pypandoc.convert_file(
                 md_input_path,
                 'docx',
                 extra_args=[
                     '--standalone',
+                    f'--reference-doc={docx_template}.docx',
                     f'--resource-path={tmpdir}'
                 ],
                 outputfile=temp_output_path
@@ -117,13 +125,9 @@ def process_and_store_conversion(md_content: str, base_filename: str) -> dict:
         if os.path.exists(temp_output_path):
             os.remove(temp_output_path)
 
-class MarkdownRequest(BaseModel):
-    content: str
-    filename: str = "document"
-
 @app.post("/convert-text/")
 async def convert_text_to_docx(request: MarkdownRequest) -> dict:
-    return process_and_store_conversion(request.content, request.filename)
+    return process_and_store_conversion(request)
 
 @app.post("/convert/")
 async def convert_md_to_docx(file: UploadFile = File(...)) -> dict:

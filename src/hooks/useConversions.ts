@@ -63,7 +63,6 @@ export function useConversions() {
       },
       body: JSON.stringify({
         content,
-        filename: settings.fileName,
         settings,
       }),
     });
@@ -71,7 +70,7 @@ export function useConversions() {
     await throwIfNotOk(response, "Conversion failed");
 
     const data = (await response.json()) as RawConversionResponse;
-    return mapConversionResult(data, settings.fileName);
+    return mapConversionResult(data, settings.filename);
   };
 
   const requestDownload = async (fileId: string) => {

@@ -1,11 +1,10 @@
-export type DocxTemplate = "academic" | "modern";
+export type DocxTemplate = "academic" | "default";
 
 export interface DocxExportSettings {
-  fileName: string;
+  filename: string;
   template: DocxTemplate;
   includeToc: boolean;
-  includeFooter: boolean;
-  footerText: string;
+  includePageNumbers: boolean;
 }
 
 export const normalizeDocxBaseName = (name?: string) => {
@@ -18,9 +17,8 @@ export const normalizeDocxBaseName = (name?: string) => {
 export const createDefaultDocxExportSettings = (
   sourceFileName?: string,
 ): DocxExportSettings => ({
-  fileName: normalizeDocxBaseName(sourceFileName),
+  filename: normalizeDocxBaseName(sourceFileName),
   template: "academic",
   includeToc: false,
-  includeFooter: false,
-  footerText: "",
+  includePageNumbers: false,
 });
