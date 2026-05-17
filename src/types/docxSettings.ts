@@ -18,7 +18,7 @@ export const createDefaultDocxExportSettings = (
   sourceFileName?: string,
 ): DocxExportSettings => ({
   filename: normalizeDocxBaseName(sourceFileName),
-  template: "academic",
+  template: "default",
   includeToc: false,
   includePageNumbers: false,
 });

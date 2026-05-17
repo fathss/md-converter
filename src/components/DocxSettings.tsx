@@ -103,8 +103,8 @@ function DocxSettings({
           }
           className="bg-gray-3 border border-primary-3 rounded-md p-2 text-sm outline-none focus:border-primary-2 cursor-pointer transition-colors"
         >
-          <option value="academic">Academic Paper</option>
           <option value="default">Default</option>
+          <option value="academic">Academic Paper</option>
         </select>
       </div>
 
