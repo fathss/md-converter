@@ -27,6 +27,7 @@ export interface FileSelectorProps {
 
 export interface FileWorkspaceProps {
   externalContent: string;
+  previewContent: string;
   onExternalContentChange: (content: string) => void;
   files?: File[];
   selectedIndex?: number;

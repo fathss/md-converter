@@ -6,6 +6,7 @@ import type { FileWorkspaceProps } from "../types/components";
 
 function FileWorkspace({
   externalContent,
+  previewContent,
   onExternalContentChange,
   files = [],
   selectedIndex = 0,
@@ -173,7 +174,7 @@ function FileWorkspace({
         {/* Right Panel: Preview */}
         <div className="flex-1 min-w-0 transition-all duration-300">
           <PreviewSection
-            content={externalContent}
+            content={previewContent}
             onScroll={handlePreviewScroll}
             scrollRef={previewScrollRef}
             files={files}
