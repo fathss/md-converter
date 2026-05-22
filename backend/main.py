@@ -9,6 +9,10 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pypandoc
 import math
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 from base_model.markdown_request import MarkdownRequest
 
@@ -24,6 +28,86 @@ app.add_middleware(
 
 # Temporary in-memory storage 
 in_memory_store = {}
+
+
+def add_field_run(paragraph, instruction: str, placeholder_text: str = "") -> None:
+    run = paragraph.add_run()
+
+    begin = OxmlElement("w:fldChar")
+    begin.set(qn("w:fldCharType"), "begin")
+
+    instruction_text = OxmlElement("w:instrText")
+    instruction_text.set(qn("xml:space"), "preserve")
+    instruction_text.text = instruction
+
+    separate = OxmlElement("w:fldChar")
+    separate.set(qn("w:fldCharType"), "separate")
+
+    text = OxmlElement("w:t")
+    text.text = placeholder_text
+
+    end = OxmlElement("w:fldChar")
+    end.set(qn("w:fldCharType"), "end")
+
+    run._r.append(begin)
+    run._r.append(instruction_text)
+    run._r.append(separate)
+    run._r.append(text)
+    run._r.append(end)
+
+
+def enable_field_updates(document: Document) -> None:
+    settings_element = document.settings.element
+    update_fields = settings_element.find(qn("w:updateFields"))
+
+    if update_fields is None:
+        update_fields = OxmlElement("w:updateFields")
+        settings_element.append(update_fields)
+
+    update_fields.set(qn("w:val"), "true")
+
+
+def add_page_numbers(document: Document) -> None:
+    for section in document.sections:
+        footer = section.footer
+        paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+
+        if paragraph.text.strip():
+            paragraph = footer.add_paragraph()
+
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        add_field_run(paragraph, "PAGE", "1")
+
+
+def add_table_of_contents(document: Document) -> None:
+    heading_paragraph = document.add_paragraph("Table of Contents")
+
+    toc_paragraph = document.add_paragraph()
+    add_field_run(
+        toc_paragraph,
+        'TOC \\o "1-3" \\h \\z \\u',
+        "Right-click to update the table of contents.",
+    )
+
+    body = document._body._element
+    body.insert(0, toc_paragraph._p)
+    body.insert(0, heading_paragraph._p)
+
+
+def customize_docx_output(docx_path: str, request: MarkdownRequest) -> None:
+    if not request.settings.includeToc and not request.settings.includePageNumbers:
+        return
+
+    document = Document(docx_path)
+    enable_field_updates(document)
+
+    if request.settings.includeToc:
+        add_table_of_contents(document)
+
+    if request.settings.includePageNumbers:
+        add_page_numbers(document)
+
+    document.save(docx_path)
 
 def render_mermaid(mmd_path, output_path):
     result = subprocess.run(
@@ -98,6 +182,8 @@ def process_and_store_conversion(request: MarkdownRequest) -> dict:
                 ],
                 outputfile=temp_output_path
             )
+
+        customize_docx_output(temp_output_path, request)
 
         # Read values from the generated .docx file
         with open(temp_output_path, "rb") as f:
