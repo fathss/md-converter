@@ -5,7 +5,7 @@ import type {
   RawConversionResponse,
 } from "../types/conversions";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "/api";
 
 const getErrorMessage = (err: unknown) =>
   err instanceof Error ? err.message : String(err);

@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import re
 import uuid
@@ -110,14 +111,28 @@ def customize_docx_output(docx_path: str, request: MarkdownRequest) -> None:
     document.save(docx_path)
 
 def render_mermaid(mmd_path, output_path):
-    result = subprocess.run(
-        ["mmdc", "-i", mmd_path, "-o", output_path],
-        capture_output=True,
-        text=True,
-        timeout=10
-    )
-    if result.returncode != 0:
-        raise Exception(f"Mermaid render failed: {result.stderr}")
+    puppeteer_config = {
+        "args": ["--no-sandbox", "--disable-setuid-sandbox"],
+    }
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as config_file:
+        json.dump(puppeteer_config, config_file)
+        config_path = config_file.name
+
+    try:
+        cmd = ["mmdc", "-i", mmd_path, "-o", output_path, "-p", config_path]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode != 0:
+            raise Exception(f"Mermaid render failed: {result.stderr}")
+    finally:
+        if os.path.exists(config_path):
+            os.remove(config_path)
 
 def process_mermaid_blocks(md_content: str, tmp_dir: str) -> str:
     pattern = r"```mermaid\s*([\s\S]*?)```"
