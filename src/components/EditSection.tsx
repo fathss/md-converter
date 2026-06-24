@@ -10,7 +10,8 @@ function EditSection({
   files,
   selectedIndex = 0,
 }: EditSectionProps) {
-  const [isCopied, setIsCopied] = useState(false);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const selectedFileName = files?.[selectedIndex]?.name;
 
@@ -21,22 +22,38 @@ function EditSection({
     return `${baseName || "document"}.md`;
   }, [selectedFileName]);
 
+  const isEmpty = !content.trim();
+
   useEffect(() => {
-    if (!isCopied) return;
-    const timeoutId = window.setTimeout(() => setIsCopied(false), 1400);
+    if (!copyMessage) return;
+    const timeoutId = window.setTimeout(() => setCopyMessage(null), 1400);
     return () => window.clearTimeout(timeoutId);
-  }, [isCopied]);
+  }, [copyMessage]);
+
+  useEffect(() => {
+    if (!saveMessage) return;
+    const timeoutId = window.setTimeout(() => setSaveMessage(null), 1400);
+    return () => window.clearTimeout(timeoutId);
+  }, [saveMessage]);
 
   const handleCopy = async () => {
+    if (isEmpty) {
+      setCopyMessage("Nothing to copy");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(content);
-      setIsCopied(true);
+      setCopyMessage("Copied");
     } catch (error) {
       console.error("Copy failed:", error);
     }
   };
 
   const handleSave = () => {
+    if (isEmpty) {
+      setSaveMessage("Nothing to save");
+      return;
+    }
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -47,8 +64,6 @@ function EditSection({
     link.remove();
     window.URL.revokeObjectURL(downloadUrl);
   };
-
-  const copyLabel = isCopied ? "Copied" : "Copy";
 
   return (
     <div className="w-full p-5 flex flex-col gap-4 border border-primary-3 rounded-2xl relative h-full">
@@ -73,8 +88,8 @@ function EditSection({
             className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-primary-3/10 hover:text-white-3 transition-colors cursor-pointer"
             onClick={handleCopy}
           >
-            <Copy size={14} className={isCopied ? "text-primary-2" : ""} />
-            <span className="text-xs">{copyLabel}</span>
+            <Copy size={14} />
+            <span className="text-xs">Copy</span>
           </button>
 
           <button
@@ -87,6 +102,9 @@ function EditSection({
           </button>
         </div>
       </div>
+
+      {copyMessage ? <p className="text-xs text-red-400">{copyMessage}</p> : null}
+      {saveMessage ? <p className="text-xs text-red-400">{saveMessage}</p> : null}
 
       <textarea
         className="w-full h-200 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent focus:border-primary-2 transition-all font-mono leading-relaxed"

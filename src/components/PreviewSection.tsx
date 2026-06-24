@@ -19,6 +19,7 @@ function PreviewSection({
   const [activeTab, setActiveTab] = useState<"markdown" | "settings">(
     "markdown",
   );
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
   const { handleDownload, loading, error } = useConversions();
   const selectedFileName = files?.[selectedIndex]?.name;
   const initialDocxSettings = useMemo(
@@ -26,6 +27,14 @@ function PreviewSection({
     [selectedFileName],
   );
   const settingsRef = useRef<DocxExportSettings>(initialDocxSettings);
+
+  const isEmpty = !content.trim();
+
+  useEffect(() => {
+    if (!exportMessage) return;
+    const timeoutId = window.setTimeout(() => setExportMessage(null), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [exportMessage]);
 
   useEffect(() => {
     settingsRef.current = initialDocxSettings;
@@ -36,6 +45,10 @@ function PreviewSection({
   };
 
   const handleExportClick = async () => {
+    if (isEmpty) {
+      setExportMessage("Nothing to export, add/write a new .md file");
+      return;
+    }
     try {
       await handleDownload(content, settingsRef.current);
     } catch (err) {
@@ -89,6 +102,7 @@ function PreviewSection({
         </div>
       </div>
 
+      {exportMessage ? <p className="text-xs text-red-400">{exportMessage}</p> : null}
       {error ? <p className="text-xs text-red-400">{error}</p> : null}
 
       <div className="relative min-h-80 flex flex-col">
