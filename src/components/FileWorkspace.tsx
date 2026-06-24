@@ -17,6 +17,8 @@ function FileWorkspace({
   const [showEditor, setShowEditor] = useState(true);
   const isResizing = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const editorPanelRef = useRef<HTMLDivElement>(null);
+  const leftWidthRef = useRef(leftWidth);
   const editorScrollRef = useRef<HTMLTextAreaElement>(null);
   const previewScrollRef = useRef<HTMLDivElement>(null);
   const isSyncingScroll = useRef(false);
@@ -82,11 +84,12 @@ function FileWorkspace({
     isResizing.current = false;
     document.body.style.cursor = "default";
     document.body.style.userSelect = "auto";
+    setLeftWidth(leftWidthRef.current);
   }, []);
 
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
-      if (!isResizing.current || !containerRef.current || !showEditor) return;
+      if (!isResizing.current || !containerRef.current || !editorPanelRef.current) return;
       const containerRect = containerRef.current.getBoundingClientRect();
       // Clamp resizing using pixel limits to avoid shrinking toolbar areas
       const minLeftPx = 400; // preferred minimum for editor panel
@@ -109,9 +112,10 @@ function FileWorkspace({
 
       newLeftPx = Math.max(effectiveMinPx, Math.min(effectiveMaxPx, newLeftPx));
       const newWidthPercent = (newLeftPx / totalPx) * 100;
-      setLeftWidth(newWidthPercent);
+      leftWidthRef.current = newWidthPercent;
+      editorPanelRef.current.style.width = `${newWidthPercent}%`;
     },
-    [showEditor],
+    [],
   );
 
   useEffect(() => {
@@ -145,8 +149,9 @@ function FileWorkspace({
         {/* Left Panel: Editor */}
         {showEditor && (
           <div
+            ref={editorPanelRef}
             style={{ width: `${leftWidth}%` }}
-            className="shrink-0 transition-all duration-300"
+            className="shrink-0"
           >
             <EditSection
               content={externalContent}
@@ -172,7 +177,7 @@ function FileWorkspace({
         )}
 
         {/* Right Panel: Preview */}
-        <div className="flex-1 min-w-0 transition-all duration-300">
+        <div className="flex-1 min-w-0">
           <PreviewSection
             content={previewContent}
             onScroll={handlePreviewScroll}
