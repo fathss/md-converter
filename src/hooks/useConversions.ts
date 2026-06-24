@@ -1,4 +1,5 @@
 import { useState } from "react";
+import mermaid from "mermaid";
 import type { DocxExportSettings } from "../types/docxSettings";
 import type {
   ConversionResult,
@@ -6,6 +7,8 @@ import type {
 } from "../types/conversions";
 
 const API_BASE_URL = "/api";
+
+mermaid.initialize({ startOnLoad: false });
 
 const getErrorMessage = (err: unknown) =>
   err instanceof Error ? err.message : String(err);
@@ -46,6 +49,116 @@ const triggerFileDownload = (blob: Blob, filename: string) => {
   window.URL.revokeObjectURL(downloadUrl);
 };
 
+async function svgToPng(svg: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return reject(new Error("Canvas context unavailable"));
+
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svg, "image/svg+xml");
+    const svgEl = svgDoc.querySelector("svg");
+    if (!svgEl) return reject(new Error("Invalid SVG"));
+
+    const viewBox = svgEl.getAttribute("viewBox");
+    let width = parseFloat(svgEl.getAttribute("width") ?? "0");
+    let height = parseFloat(svgEl.getAttribute("height") ?? "0");
+
+    if ((!width || !height) && viewBox) {
+      const parts = viewBox.split(" ").map(Number);
+      width = parts[2];
+      height = parts[3];
+    }
+
+    const scale = 2;
+    canvas.width = (width || 800) * scale;
+    canvas.height = (height || 600) * scale;
+
+    svgEl.setAttribute("width", String(canvas.width));
+    svgEl.setAttribute("height", String(canvas.height));
+
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgEl);
+    const base64 = btoa(unescape(encodeURIComponent(svgString)));
+
+    const img = new Image();
+    img.src = `data:image/svg+xml;base64,${base64}`;
+
+    img.onload = () => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/png"));
+    };
+
+    img.onerror = () => reject(new Error("Failed to load SVG as image"));
+  });
+}
+
+async function preprocessMermaid(markdown: string): Promise<string> {
+  const pattern = /```mermaid\s*\r?\n([\s\S]*?)```/g;
+  const matches = [...markdown.matchAll(pattern)];
+
+  let processed = markdown;
+
+  // render inside a visible but zero-opacity container so layout is fully computed
+  const container = document.createElement("div");
+  container.style.cssText = [
+    "position:fixed",
+    "top:0",
+    "left:0",
+    "opacity:0",
+    "pointer-events:none",
+    "width:2000px",
+    "overflow:visible",
+    "z-index:-1",
+  ].join(";");
+  document.body.appendChild(container);
+
+  try {
+    for (const match of matches) {
+      const diagram = match[1].trim();
+      const id = `mermaid-${crypto.randomUUID()}`;
+
+      const { svg } = await mermaid.render(id, diagram);
+
+      container.innerHTML = svg;
+      const mountedSvg = container.querySelector("svg");
+      if (!mountedSvg) continue;
+
+      // wait for layout to fully settle
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      // read viewBox from the mounted SVG — most reliable source of true dimensions
+      const viewBox = mountedSvg.getAttribute("viewBox");
+      let width = parseFloat(mountedSvg.getAttribute("width") ?? "0");
+      let height = parseFloat(mountedSvg.getAttribute("height") ?? "0");
+
+      if ((!width || !height) && viewBox) {
+        const parts = viewBox.split(" ").map(Number);
+        width = parts[2];
+        height = parts[3];
+      }
+
+      // last resort — scrollWidth/scrollHeight from the DOM
+      if (!width) width = mountedSvg.scrollWidth;
+      if (!height) height = mountedSvg.scrollHeight;
+
+      mountedSvg.setAttribute("width", String(width));
+      mountedSvg.setAttribute("height", String(height));
+
+      const resolvedSvg = new XMLSerializer().serializeToString(mountedSvg);
+      const png = await svgToPng(resolvedSvg);
+      processed = processed.replace(match[0], `![diagram](${png})`);
+    }
+  } finally {
+    document.body.removeChild(container);
+  }
+
+  return processed;
+}
+
 export function useConversions() {
   const [conversionResult, setConversionResult] =
     useState<ConversionResult>(null);
@@ -56,13 +169,15 @@ export function useConversions() {
     content: string,
     settings: DocxExportSettings,
   ) => {
+    const processedContent = await preprocessMermaid(content);
+
     const response = await fetch(`${API_BASE_URL}/convert-text/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        content,
+        content: processedContent,
         settings,
       }),
     });

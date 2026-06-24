@@ -9,22 +9,8 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 FROM python:3.12-slim
 WORKDIR /app
 
-# Copy only installed Python packages
+# Copy only installed Python packages (includes pandoc via pypandoc_binary)
 COPY --from=builder /install /usr/local
-
-# Tell Puppeteer to skip bundled Chromium download and use system one instead
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
-# Install pandoc, Chromium, Node, and mmdc in one layer
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    fonts-liberation \
-    nodejs npm \
-    && npm install -g @mermaid-js/mermaid-cli \
-    && apt-get purge -y npm \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /root/.npm
 
 COPY . .
 EXPOSE 8000
