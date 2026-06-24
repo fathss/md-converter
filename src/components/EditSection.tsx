@@ -46,6 +46,7 @@ function EditSection({
       setCopyMessage("Copied");
     } catch (error) {
       console.error("Copy failed:", error);
+      setCopyMessage("Copy failed");
     }
   };
 
@@ -103,8 +104,12 @@ function EditSection({
         </div>
       </div>
 
-      {copyMessage ? <p className="text-xs text-red-400">{copyMessage}</p> : null}
-      {saveMessage ? <p className="text-xs text-red-400">{saveMessage}</p> : null}
+      {copyMessage ? (
+        <p className="text-xs text-red-400">{copyMessage}</p>
+      ) : null}
+      {saveMessage ? (
+        <p className="text-xs text-red-400">{saveMessage}</p>
+      ) : null}
 
       <textarea
         className="w-full h-200 bg-gray-2 p-6 rounded-lg text-xs text-white-1 outline-none resize-none border border-transparent focus:border-primary-2 transition-all font-mono leading-relaxed"
@@ -116,7 +121,7 @@ function EditSection({
       />
 
       <div className="flex justify-between items-center text-xs text-white-4 px-1">
-        <p>Characters: {content.replace(/[\s#\\*]/g, "").length}</p>
+        <p>Characters: {content.length}</p>
       </div>
     </div>
   );

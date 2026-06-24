@@ -1,9 +1,11 @@
 import io
 import os
 import re
+import time
 import uuid
 import base64
 import tempfile
+from urllib.parse import quote
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -135,7 +137,6 @@ def process_and_store_conversion(request: MarkdownRequest) -> dict:
                 f.write(md_content)
 
             docx_template = request.settings.template
-            print(docx_template)
 
             pypandoc.convert_file(
                 md_input_path,
@@ -147,6 +148,9 @@ def process_and_store_conversion(request: MarkdownRequest) -> dict:
                 ],
                 outputfile=temp_output_path
             )
+
+        if not os.path.exists(temp_output_path) or os.path.getsize(temp_output_path) == 0:
+            raise RuntimeError("Pandoc produced empty output")
 
         customize_docx_output(temp_output_path, request)
 
@@ -160,7 +164,8 @@ def process_and_store_conversion(request: MarkdownRequest) -> dict:
         in_memory_store[file_id] = {
             "filename": final_filename,
             "content": buffer,
-            "size": size
+            "size": size,
+            "stored_at": time.time()
         }
 
         return {
@@ -177,18 +182,22 @@ def process_and_store_conversion(request: MarkdownRequest) -> dict:
 
 @app.post("/convert-text/")
 async def convert_text_to_docx(request: MarkdownRequest) -> dict:
-    if not request.settings.filename.endswith(".md"):
-        raise HTTPException(status_code=400, detail="Only .md files are allowed")
+    if not request.settings.filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
     return process_and_store_conversion(request)
 
 
 @app.post("/convert/")
 async def convert_md_to_docx(file: UploadFile = File(...)) -> dict:
-    if not file.filename.endswith('.md'):
+    if not file.filename or not file.filename.endswith('.md'):
         raise HTTPException(status_code=400, detail="Only .md files are allowed")
     content = await file.read()
+    try:
+        decoded = content.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File is not valid UTF-8")
     request = MarkdownRequest(
-        content=content.decode("utf-8"),
+        content=decoded,
         settings={"filename": file.filename}
     )
     return process_and_store_conversion(request)
@@ -196,6 +205,12 @@ async def convert_md_to_docx(file: UploadFile = File(...)) -> dict:
 
 @app.get("/download/{file_id}")
 async def download_file(file_id: str) -> StreamingResponse:
+    now = time.time()
+    expired = [fid for fid, data in in_memory_store.items()
+               if now - data.get("stored_at", 0) > 3600]
+    for fid in expired:
+        del in_memory_store[fid]
+
     file_data = in_memory_store.get(file_id)
     if not file_data:
         raise HTTPException(status_code=404, detail="File not found or expired")
@@ -205,7 +220,7 @@ async def download_file(file_id: str) -> StreamingResponse:
     buffer.seek(0)
 
     headers = {
-        "Content-Disposition": f"attachment; filename={filename}",
+        "Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}",
         "Access-Control-Expose-Headers": "Content-Disposition"
     }
 

@@ -11,7 +11,7 @@ export const normalizeDocxBaseName = (name?: string) => {
   if (!name) return "document";
   const trimmed = name.trim();
   if (!trimmed) return "document";
-  return trimmed.replace(/\.(md|markdown|docx)$/i, "");
+  return trimmed.replace(/\.(md|markdown|docx)$/i, "").replace(/\.+$/, "");
 };
 
 export const createDefaultDocxExportSettings = (

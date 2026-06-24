@@ -57,7 +57,6 @@ function MainPage() {
           files={files}
           selectedIndex={selectedIndex}
           onIndexChange={setSelectedIndex}
-          onContentLoad={updateContent}
         />
       </div>
     </>

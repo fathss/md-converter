@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Layout, FileText, PencilLine } from "lucide-react";
 import {
   normalizeDocxBaseName,
@@ -16,6 +16,16 @@ function DocxSettings({
   const [includePageNumbers, setIncludePageNumbers] = useState(
     initialSettings.includePageNumbers,
   );
+
+  useEffect(() => {
+    onSettingsChange?.({
+      filename,
+      template,
+      includeToc,
+      includePageNumbers,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const publishSettings = (nextSettings: DocxExportSettings) => {
     onSettingsChange?.(nextSettings);

@@ -32,7 +32,6 @@ export interface FileWorkspaceProps {
   files?: File[];
   selectedIndex?: number;
   onIndexChange?: (index: number) => void;
-  onContentLoad?: (content: string) => void;
 }
 
 export interface EditSectionProps {
@@ -43,7 +42,6 @@ export interface EditSectionProps {
   files?: File[];
   selectedIndex?: number;
   onIndexChange?: (index: number) => void;
-  onContentLoad?: (content: string) => void;
 }
 
 export interface PreviewSectionProps {
@@ -53,7 +51,6 @@ export interface PreviewSectionProps {
   files?: File[];
   selectedIndex?: number;
   onIndexChange?: (index: number) => void;
-  onContentLoad?: (content: string) => void;
 }
 
 export interface DocxSettingsProps {

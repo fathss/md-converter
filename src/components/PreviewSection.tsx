@@ -36,10 +36,6 @@ function PreviewSection({
     return () => window.clearTimeout(timeoutId);
   }, [exportMessage]);
 
-  useEffect(() => {
-    settingsRef.current = initialDocxSettings;
-  }, [initialDocxSettings]);
-
   const updateSettingsRef = (nextSettings: DocxExportSettings) => {
     settingsRef.current = nextSettings;
   };
@@ -102,7 +98,9 @@ function PreviewSection({
         </div>
       </div>
 
-      {exportMessage ? <p className="text-xs text-red-400">{exportMessage}</p> : null}
+      {exportMessage ? (
+        <p className="text-xs text-red-400">{exportMessage}</p>
+      ) : null}
       {error ? <p className="text-xs text-red-400">{error}</p> : null}
 
       <div className="relative min-h-80 flex flex-col">

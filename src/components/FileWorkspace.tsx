@@ -11,7 +11,6 @@ function FileWorkspace({
   files = [],
   selectedIndex = 0,
   onIndexChange,
-  onContentLoad,
 }: FileWorkspaceProps) {
   const [leftWidth, setLeftWidth] = useState(40);
   const [showEditor, setShowEditor] = useState(true);
@@ -161,7 +160,6 @@ function FileWorkspace({
               files={files}
               selectedIndex={selectedIndex}
               onIndexChange={onIndexChange}
-              onContentLoad={onContentLoad}
             />
           </div>
         )}
@@ -185,7 +183,6 @@ function FileWorkspace({
             files={files}
             selectedIndex={selectedIndex}
             onIndexChange={onIndexChange}
-            onContentLoad={onContentLoad}
           />
         </div>
       </div>

@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "11025:80"
+    restart: unless-stopped
     depends_on:
       - backend
 
@@ -14,5 +15,6 @@ services:
       dockerfile: Dockerfile
     expose:
       - "8000"
+    restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1
