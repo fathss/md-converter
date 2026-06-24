@@ -177,6 +177,8 @@ def process_and_store_conversion(request: MarkdownRequest) -> dict:
 
 @app.post("/convert-text/")
 async def convert_text_to_docx(request: MarkdownRequest) -> dict:
+    if not request.settings.filename.endswith(".md"):
+        raise HTTPException(status_code=400, detail="Only .md files are allowed")
     return process_and_store_conversion(request)
 
 
